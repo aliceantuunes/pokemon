@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokédex Lab OS · Alice Antunes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ==================== CABEÇALHO ==================== -->
+  <header class="lab-header">
+    <div class="container header-grid">
+      <div class="brand-cluster">
+        <div class="rotary-dial" aria-hidden="true">
+          <div class="dial-inner"></div>
+        </div>
+        <div>
+          <h1 class="app-title">Pokédex <span class="pastel-tag">Lab</span></h1>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="open-cmd-btn" class="cmd-trigger" title="Abrir Paleta de Comandos">
+          <span>Comandos</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+
+        <button type="button" id="fault-toggle-btn" class="fault-switch" title="Simular falha HTTP 503 na PokéAPI">
+          <span class="led-dot" id="fault-led"></span>
+          <span id="fault-label">API Online</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ÁREA DE TRABALHO BENTO ==================== -->
+  <main class="container bento-workspace">
+    <!-- COLUNA ESQUERDA: BUSCA + CATÁLOGO INTERATIVO -->
+    <section class="left-deck">
+      <!-- Módulo de Pesquisa -->
+      <div class="module-card search-module">
+        <div class="module-top">
+          <div>
+            <span class="micro-code">EXPLORAÇÃO &amp; SORTEIO</span>
+            <h2>Localizar Espécie</h2>
+          </div>
+          <span class="pill-counter" id="results-caption">12 exibidos</span>
+        </div>
+
+        <form id="search-form" class="search-controls">
+          <div class="input-shell">
+            <span class="prompt-symbol">›</span>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Nome ou número (ex.: pikachu, 94, lucario)..."
+              autocomplete="off"
+            />
+            <button type="button" id="clear-search-btn" class="clear-x hidden" aria-label="Limpar">×</button>
+          </div>
+
+          <button type="submit" class="btn btn-pastel">Buscar</button>
+          <button type="button" id="random-btn" class="btn btn-white" title="Sortear Pokémon aleatório">
+            <span class="dice-icon">⚄</span> Aleatório
+          </button>
+        </form>
+      </div>
+
+      <!-- Módulo de Catálogo -->
+      <div class="module-card catalog-module">
+        <div class="module-top">
+          <div>
+            <span class="micro-code">CATÁLOGO ELEMENTAL</span>
+            <h2>Matriz de Espécies</h2>
+          </div>
+          <div class="page-readout">
+            PÁG <strong id="page-current">01</strong>/<strong id="page-total">113</strong>
+          </div>
+        </div>
+
+        <!-- Filtros por Tipo -->
+        <div class="type-dock" id="filter-dock" role="group" aria-label="Filtrar por tipo">
+          <button class="type-chip-btn active" data-type="all">Todos</button>
+          <button class="type-chip-btn" data-type="fire">Fogo</button>
+          <button class="type-chip-btn" data-type="water">Água</button>
+          <button class="type-chip-btn" data-type="grass">Planta</button>
+          <button class="type-chip-btn" data-type="electric">Elétrico</button>
+          <button class="type-chip-btn" data-type="psychic">Psíquico</button>
+          <button class="type-chip-btn" data-type="dragon">Dragão</button>
+          <button class="type-chip-btn" data-type="ghost">Fantasma</button>
+          <button class="type-chip-btn" data-type="fairy">Fada</button>
+        </div>
+
+        <!-- Banner de Erro / Status -->
+        <div id="catalog-alert" class="error-strip hidden" role="alert"></div>
+
+        <!-- Grade 3D de Pokémon -->
+        <div id="pokemon-grid" class="pokemon-grid"></div>
+
+        <!-- Navegação de Páginas -->
+        <div class="pagination-dock" id="pagination-bar">
+          <button type="button" id="prev-btn" class="btn btn-white btn-sm" disabled>← Anterior</button>
+          <div class="page-dots" id="page-jump-dots"></div>
+          <button type="button" id="next-btn" class="btn btn-white btn-sm">Próximo →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUNA DIREITA: ARENA DE BATALHA, INSPETOR BIOMÉTRICO & FAVORITOS -->
+    <aside class="right-deck">
+      <!-- Arena de Batalha & Radar -->
+      <div class="module-card battle-module">
+        <div class="module-top">
+          <div>
+            <span class="micro-code">SIMULADOR DE COMBATE</span>
+            <h2>Arena de Batalha</h2>
+          </div>
+          <div class="arena-top-actions">
+            <button type="button" id="quick-duel-btn" class="mini-pastel-btn" title="Sortear dois Pokémon e batalhar">
+              ⚡ Duelo Rápido
+            </button>
+            <button type="button" id="clear-compare-btn" class="link-action hidden">Limpar</button>
+          </div>
+        </div>
+
+        <div id="compare-body"></div>
+      </div>
+
+      <!-- Ficha Técnica -->
+      <div class="module-card inspector-module">
+        <div class="module-top">
+          <div>
+            <span class="micro-code">TELEMETRIA DA ESPÉCIE</span>
+            <h2>Ficha Biométrica</h2>
+          </div>
+          <span id="source-pill" class="source-badge hidden">API</span>
+        </div>
+
+        <div id="inspector-body">
+          <p class="empty-hint">Selecione um cartão no catálogo para inspecionar.</p>
+        </div>
+      </div>
+
+      <!-- Dock de Favoritos -->
+      <div class="module-card">
+        <div class="module-top">
+          <div>
+            <span class="micro-code">FAVORITOS</span>
+            <h2>Coleção Salva</h2>
+          </div>
+          <span class="pill-counter" id="fav-count">0</span>
+        </div>
+
+        <div id="favorites-body">
+          <p class="empty-hint">Nenhum favorito salvo ainda. Use ☆ na ficha biométrica.</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="lab-footer">
+    <div class="container footer-row">
+      <span>Pokédex Lab OS · Arquitetura Gateway &amp; Cache em Memória · PokéAPI v2</span>
+      <span>Armazenamento local ativo</span>
+    </div>
+  </footer>
+
+  <!-- ==================== MODAL COMMAND PALETTE (CTRL+K) ==================== -->
+  <div id="cmd-backdrop" class="cmd-backdrop hidden" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
+    <div class="cmd-window">
+      <div class="cmd-search-row">
+        <span class="prompt-symbol">⌘</span>
+        <input
+          type="text"
+          id="cmd-input"
+          placeholder="Digite o nome de um Pokémon ou escolha uma ação..."
+          autocomplete="off"
+        />
+        <button type="button" id="close-cmd-btn" class="cmd-esc">ESC</button>
+      </div>
+      <div class="cmd-list" id="cmd-results"></div>
+    </div>
+  </div>
+
+  <!-- Notificação Flutuante -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
